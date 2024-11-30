@@ -229,12 +229,14 @@ export const adminApi = {
   // Управление пользователями
   users: {
     async createUser(userData: {
-      telegram_id?: string
-      username?: string
-      full_name?: string
-      email?: string
-      phone?: string
-      role?: string
+      telegram_id: number
+      first_name: string
+      last_name?: string | null
+      username?: string | null
+      photo_url?: string | null
+      language_code?: string | null
+      phone_number?: string | null
+      last_seen?: string
     }) {
       const { data, error } = await supabaseAdmin
         .from('users')
@@ -281,14 +283,17 @@ export const adminApi = {
   // Управление посылками
   packages: {
     async createPackage(packageData: {
+      user_id: string
       tracking_number: string
-      status?: string
-      current_location?: string
-      estimated_delivery?: string
-      user_id?: string
-      weight?: number
-      dimensions?: any
-      description?: string
+      status: string
+      sender_name: string
+      sender_phone: string
+      recipient_name: string
+      recipient_phone: string
+      origin_address: string
+      destination_address: string
+      weight?: number | null
+      dimensions?: string | null
     }) {
       const { data, error } = await supabaseAdmin
         .from('packages')
@@ -352,10 +357,10 @@ export const adminApi = {
       notes?: string
     }) {
       const { data, error } = await supabaseAdmin
-        .from('tracking_history')
+        .from('package_status_history')
         .insert({
           ...trackingData,
-          timestamp: new Date().toISOString()
+          created_at: new Date().toISOString()
         })
         .select()
         .single()
@@ -366,10 +371,10 @@ export const adminApi = {
 
     async getPackageHistory(packageId: string) {
       const { data, error } = await supabaseAdmin
-        .from('tracking_history')
+        .from('package_status_history')
         .select('*')
         .eq('package_id', packageId)
-        .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       return data
@@ -377,7 +382,7 @@ export const adminApi = {
 
     async deleteTrackingEntry(entryId: string) {
       const { error } = await supabaseAdmin
-        .from('tracking_history')
+        .from('package_status_history')
         .delete()
         .eq('id', entryId)
       

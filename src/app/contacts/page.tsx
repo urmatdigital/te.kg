@@ -27,7 +27,7 @@ export default function ContactsPage() {
         <div className="space-y-6">
           <ContactsSection />
 
-          <Card variant="default" padding="lg">
+          <Card variant="default" className="p-6">
             <h2 className="text-lg font-semibold mb-4">Напишите нам</h2>
             <form className="space-y-4">
               <div>

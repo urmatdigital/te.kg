@@ -14,7 +14,7 @@ interface UserState {
   addPackage: (package_: Package) => void
   login: (email: string, password: string) => Promise<any>
   signup: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name: string, phone?: string) => Promise<any>
+  register: (email: string, password: string, name: string, phone?: string, telegramId?: string) => Promise<any>
   logout: () => Promise<void>
 }
 
@@ -82,7 +82,7 @@ export const useStore = create<UserState>()(
         }
       },
 
-      register: async (email: string, password: string, name: string, phone?: string) => {
+      register: async (email: string, password: string, name: string, phone?: string, telegramId?: string) => {
         set({ loading: true, error: null })
         try {
           // Проверяем обязательные поля
@@ -107,22 +107,23 @@ export const useStore = create<UserState>()(
             throw new Error('Не удалось создать пользователя')
           }
 
-          // Создаем запись клиента
-          const { data: newClient, error: insertError } = await supabase
-            .from('clients')
+          // Создаем запись пользователя
+          const { data: newUser, error: insertError } = await supabase
+            .from('users')
             .insert([
               {
-                user_id: signUpData.user?.id,
-                full_name: name,
-                phone: phone
+                telegram_id: Number(telegramId),
+                first_name: name,
+                phone_number: phone,
+                last_seen: new Date().toISOString()
               }
             ])
             .select()
             .single()
 
           if (insertError) {
-            console.error('Error creating client:', insertError)
-            // Продолжаем выполнение даже если не удалось создать клиента
+            console.error('Error creating user:', insertError)
+            // Продолжаем выполнение даже если не удалось создать пользователя
             // Таблица будет создана позже через миграцию
           }
 

@@ -1,69 +1,100 @@
 'use client'
 
 import Link from 'next/link'
-import { Logo } from '@/assets/logo'
+import Image from 'next/image'
 
 export default function Footer() {
   return (
-    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Логотип и информация о компании */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Logo className="h-8 w-auto" />
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  TULPAR <span className="text-blue-600 dark:text-blue-400">EXPRESS</span>
-                </span>
+    <footer className="bg-[#020817] py-8 mt-auto">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Логотип и описание */}
+          <div className="space-y-4">
+            <Link href="/" className="flex items-center group transition-transform duration-300 hover:scale-105">
+              <div className="relative h-8 md:h-12 w-8 md:w-12 transition-transform duration-300 group-hover:rotate-12">
+                <Image
+                  src="/logo.png"
+                  alt="Tulpar Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain w-full h-full"
+                  priority
+                />
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Высокое качество логистических и транспортных услуг
-              </p>
-            </div>
-
-            {/* Быстрые ссылки */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase">
-                Навигация
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/about" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                    О нас
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/services" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                    Услуги
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                    Контакты
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Контактная информация */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase">
-                Контакты
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>Телефон: +996 (501) 18-88-38</li>
-                <li>Email: info@te.kg</li>
-                <li>Адрес: г. Бишкек, ул.Ахматбека Суюмбаева, 123/1</li><li>Адрес: г. Ош, ул. Примерная, 123</li><li>Адрес: г. Талас>, ул. Примерная, 123</li>
-              </ul>
-            </div>
+              <div className="relative h-6 md:h-12 w-28 md:w-40 ml-2 transition-opacity duration-300 group-hover:opacity-80">
+                <Image
+                  src="/logo_text_horizont.svg"
+                  alt="Tulpar Express"
+                  width={160}
+                  height={48}
+                  className="object-contain w-full h-full"
+                  priority
+                />
+              </div>
+            </Link>
+            <p className="text-sm text-gray-400">
+              Безопасная авторизация через Telegram
+            </p>
           </div>
 
-          {/* Авторские права */}
-          <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-4">
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+          {/* Навигация */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-white uppercase">
+              Навигация
+            </h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/docs" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">
+                  Документация
+                </Link>
+              </li>
+              <li>
+                <Link href="/api" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">
+                  API
+                </Link>
+              </li>
+              <li>
+                <Link href="/support" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">
+                  Поддержка
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Контакты */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-white uppercase">
+              Контакты
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li>Email: support@tulpar.express</li>
+              <li>Telegram: @tulparexpress</li>
+              <li>GitHub: github.com/tulparexpress</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Копирайт */}
+        <div className="mt-8 pt-8 border-t border-gray-800">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-center text-sm text-gray-400">
               {new Date().getFullYear()} Tulpar Express. Все права защищены.
             </p>
+            <Link
+              href="https://asystem.pro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className="relative h-6 w-24">
+                <Image
+                  src="/asystem.svg"
+                  alt="ASystem"
+                  fill
+                  className="object-contain opacity-60 hover:opacity-100 transition-opacity"
+                />
+              </div>
+            </Link>
           </div>
         </div>
       </div>

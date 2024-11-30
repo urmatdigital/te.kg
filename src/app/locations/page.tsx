@@ -26,7 +26,7 @@ export default function LocationsPage() {
         <div className="space-y-6">
           <LocationsSection />
 
-          <Card variant="default" padding="lg">
+          <Card variant="default" className="p-6">
             <div className="aspect-w-16 aspect-h-9">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d93561.93331260461!2d74.5698!3d42.8746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x389eb7dc91b3c881%3A0x492ebaf57cdee27d!2z0JHQuNGI0LrQtdC6!5e0!3m2!1sru!2skg!4v1234567890"
@@ -41,7 +41,7 @@ export default function LocationsPage() {
             </div>
           </Card>
 
-          <Card variant="default" padding="lg">
+          <Card variant="default" className="p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-primary" />
               График работы пунктов приема

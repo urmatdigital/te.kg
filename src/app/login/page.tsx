@@ -1,152 +1,177 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useStore } from '@/lib/store'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import { Card } from '@/components/ui/Card'
-import { Mail, Lock, Eye, EyeOff, ChevronRight, ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { useState, useEffect, useRef } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+const VerificationInput = ({ value, onChange, onComplete }: { 
+  value: string; 
+  onChange: (value: string) => void;
+  onComplete: (value: string) => void;
+}) => {
+  const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Проверяем сессию при загрузке страницы
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.replace('/dashboard')
+  const handleInput = (index: number, value: string) => {
+    if (value.length > 1) {
+      // Обработка вставки
+      const pastedValue = value.slice(0, 6).replace(/\D/g, '');
+      const newValue = pastedValue.padEnd(6, '');
+      onChange(newValue);
+      if (pastedValue.length === 6) {
+        onComplete(pastedValue);
       }
+      return;
     }
-    checkSession()
-  }, [router])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    if (!/^\d*$/.test(value)) return;
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      
-      if (error) throw error
-      if (data.session) {
-        router.replace('/dashboard')
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Произошла ошибка при входе')
-    } finally {
-      setLoading(false)
+    const newValue = value.slice(0, 1);
+    const currentValue = Array.from(value || '').slice(0, 6);
+    currentValue[index] = newValue;
+    const finalValue = currentValue.join('');
+    onChange(finalValue);
+
+    if (newValue && index < 5) {
+      inputs.current[index + 1]?.focus();
     }
-  }
+
+    if (finalValue.length === 6) {
+      onComplete(finalValue);
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !value[index] && index > 0) {
+      inputs.current[index - 1]?.focus();
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Back Button - Mobile Only */}
-      <div className="p-4 md:hidden">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Назад
-        </Link>
-      </div>
+    <div className="flex gap-2 justify-center">
+      {[0, 1, 2, 3, 4, 5].map((index) => (
+        <input
+          key={index}
+          ref={(el) => {
+            inputs.current[index] = el;
+            return undefined;
+          }}
+          type="text"
+          maxLength={6}
+          value={value[index] || ''}
+          onChange={(e) => handleInput(index, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(index, e)}
+          className="w-12 h-12 text-center border rounded-lg text-xl"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          id={`code-${index}`}
+        />
+      ))}
+    </div>
+  );
+};
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-md p-6 space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Войти в аккаунт</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Введите свои данные для входа
-            </p>
+export default function LoginPage() {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    // Получаем код из URL
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = params.get('code');
+
+    // Если есть код в URL, автоматически заполняем его
+    if (urlCode && urlCode.length === 6) {
+      setCode(urlCode);
+      // Автоматически запускаем проверку кода
+      verifyCode(urlCode);
+    }
+  }, []);
+
+  const verifyCode = async (verificationCode: string) => {
+    if (verificationCode.length !== 6) {
+      setError('Код должен состоять из 6 цифр');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const currentTime = new Date().toISOString();
+      
+      // Проверяем код в базе данных
+      const { data: verificationData, error: verificationError } = await supabase
+        .from('verification_codes')
+        .select('*')
+        .eq('code', verificationCode)
+        .eq('is_used', false)
+        .gt('expires_at', currentTime)
+        .single();
+
+      if (verificationError || !verificationData) {
+        setError('Неверный или истекший код подтверждения');
+        return;
+      }
+
+      // Помечаем код как использованный
+      const { error: updateError } = await supabase
+        .from('verification_codes')
+        .update({ is_used: true })
+        .eq('code', verificationCode);
+
+      if (updateError) {
+        console.error('Error updating verification code:', updateError);
+        setError('Ошибка при проверке кода');
+        return;
+      }
+
+      // Сохраняем telegram_id в localStorage и cookies
+      const telegramId = verificationData.telegram_id;
+      localStorage.setItem('telegram_id', telegramId);
+      document.cookie = `telegram_id=${telegramId}; path=/; max-age=2592000`; // 30 дней
+      
+      // Перенаправляем на профиль
+      window.location.href = '/profile';
+
+    } catch (error) {
+      console.error('Error verifying code:', error);
+      setError('Ошибка при проверке кода');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold text-center mb-6">
+          Введите код подтверждения
+        </h1>
+        
+        <VerificationInput
+          value={code}
+          onChange={setCode}
+          onComplete={verifyCode}
+        />
+
+        {error && (
+          <div className="mt-4 text-red-500 text-center">
+            {error}
           </div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Input */}
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                  placeholder="example@email.com"
-                />
-                <Mail className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="space-y-1">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Пароль
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                  placeholder="••••••••"
-                />
-                <Lock className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="text-sm text-red-500 dark:text-red-400">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                'Загрузка...'
-              ) : (
-                <>
-                  Войти
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="text-center text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Нет аккаунта? </span>
-            <Link href="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-              Зарегистрироваться
-            </Link>
+        {loading && (
+          <div className="mt-4 text-center text-gray-500">
+            Проверка кода...
           </div>
-        </Card>
+        )}
+
+        <div className="mt-6 text-center text-sm text-gray-500">
+          Код был отправлен в Telegram бота
+        </div>
       </div>
     </div>
-  )
+  );
 }

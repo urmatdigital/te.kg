@@ -1,0 +1,7 @@
+version: "2"
+authtoken: 2pWdCSm9p8ugnidzeDv7yVi25RG_5opi46aBYTivCTUJM6UHj
+tunnels:
+  web:
+    proto: http
+    addr: 80
+    domain: heerful-anchovy-factually.ngrok-free.app

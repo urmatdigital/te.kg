@@ -47,7 +47,7 @@ export function AddressSection() {
   }
 
   return (
-    <Card variant="default" padding="lg" className="mt-6">
+    <Card variant="default" className="p-6 mt-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold">Адрес склада в Китае</h2>
         <div className="px-3 py-1 bg-primary/10 dark:bg-primary/20 rounded-full">

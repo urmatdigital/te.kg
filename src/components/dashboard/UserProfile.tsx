@@ -1,87 +1,103 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { User2, Settings, Copy, Edit, Phone, Calendar, Hash } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { getTelegramWebApp } from '@/utils/telegram'
+import Image from 'next/image'
 
-interface ClientData {
-  full_name: string
-  phone: string
-  client_number: string
-  created_at: string
+interface TelegramUserData {
+  id: number;
+  first_name: string;
+  last_name: string | null;
+  username: string | null;
+  photo_url: string | null;
+  phone_number?: string;
+  language_code: string | null;
 }
 
 export function UserProfile() {
-  const [mounted, setMounted] = useState(false)
-  const [client, setClient] = useState<ClientData | null>(null)
+  const [userData, setUserData] = useState<TelegramUserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
-  const user = useStore((state) => state.user)
+  const { user } = useStore()
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted || !user) return
-
-    const fetchClientData = async () => {
+    const fetchUserData = async () => {
       try {
-        const { data: clientData, error } = await supabase
-          .from('clients')
-          .select('full_name, phone, client_number, created_at')
-          .eq('user_id', user.id)
-          .maybeSingle()
+        setLoading(true)
+        
+        // Получаем данные из Telegram WebApp
+        const webApp = getTelegramWebApp()
+        if (webApp && webApp.initDataUnsafe.user) {
+          const telegramUser = webApp.initDataUnsafe.user
+          setUserData({
+            id: telegramUser.id,
+            first_name: telegramUser.first_name,
+            last_name: telegramUser.last_name || null,
+            username: telegramUser.username || null,
+            photo_url: telegramUser.photo_url || null,
+            language_code: telegramUser.language_code || null
+          })
 
-        if (error) {
-          console.error('Error fetching client data:', error)
-          return
+          // Обновляем данные в Supabase
+          const { error } = await supabase
+            .from('users')
+            .update({
+              first_name: telegramUser.first_name,
+              last_name: telegramUser.last_name,
+              username: telegramUser.username,
+              photo_url: telegramUser.photo_url,
+              language_code: telegramUser.language_code,
+              last_seen: new Date().toISOString()
+            })
+            .eq('telegram_id', telegramUser.id)
+
+          if (error) {
+            console.error('Error updating user data:', error)
+          }
+        } else {
+          // Если нет данных из WebApp, получаем из Supabase
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('telegram_id', user?.user_metadata?.telegram_id)
+            .single()
+
+          if (error) {
+            console.error('Error fetching user data:', error)
+          } else if (data) {
+            setUserData({
+              id: data.telegram_id,
+              first_name: data.first_name,
+              last_name: data.last_name || null,
+              username: data.username || null,
+              photo_url: data.photo_url || null,
+              language_code: data.language_code || null
+            })
+          }
         }
-
-        setClient(clientData)
       } catch (error) {
-        console.error('Error in fetchClientData:', error)
+        console.error('Error in fetchUserData:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchClientData()
-  }, [mounted, user])
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      // Можно добавить toast уведомление о успешном копировании
-    } catch (err) {
-      console.error('Failed to copy:', err)
+    if (user) {
+      fetchUserData()
     }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  if (!mounted || !user) return null
+  }, [user])
 
   if (loading) {
     return (
-      <Card variant="default" padding="lg" className="w-full animate-pulse">
-        <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-          <div className="space-y-4 flex-1">
-            <div className="h-6 w-2/3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      <Card className="p-6">
+        <div className="animate-pulse flex space-x-4">
+          <div className="rounded-full bg-gray-200 h-12 w-12"></div>
+          <div className="flex-1 space-y-4 py-1">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
             <div className="space-y-2">
-              <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
             </div>
           </div>
         </div>
@@ -89,100 +105,54 @@ export function UserProfile() {
     )
   }
 
-  if (!client) {
-    return (
-      <Card variant="default" padding="lg" className="w-full">
-        <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
-            <User2 className="w-12 h-12 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">{user.email}</h2>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => router.push('/dashboard/profile/edit')}
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Заполнить данные
-            </Button>
-          </div>
-        </div>
-      </Card>
-    )
+  if (!userData) {
+    return null
   }
 
   return (
-    <Card variant="default" padding="lg" className="w-full">
-      <div className="space-y-6">
-        {/* Основная информация */}
-        <div className="flex items-start gap-6">
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <User2 className="w-12 h-12 text-primary" />
+    <Card className="p-6">
+      <div className="flex items-start space-x-6">
+        {userData.photo_url ? (
+          <div className="relative w-20 h-20">
+            <Image
+              src={userData.photo_url}
+              alt={userData.first_name}
+              fill
+              className="rounded-full object-cover"
+            />
           </div>
-          <div className="flex-1">
-            <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-2xl font-semibold">{client.full_name}</h2>
-              <span className="text-sm text-muted-foreground">
-                с {formatDate(client.created_at)}
-              </span>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-primary" />
-                  <div className="flex-1">
-                    <div className="text-sm text-muted-foreground mb-1">Телефон</div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{client.phone}</span>
-                      <button
-                        onClick={() => copyToClipboard(client.phone)}
-                        className="text-muted-foreground hover:text-primary transition-colors"
-                        title="Копировать телефон"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Hash className="w-5 h-5 text-primary" />
-                  <div className="flex-1">
-                    <div className="text-sm text-muted-foreground mb-1">Номер клиента</div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{client.client_number}</span>
-                      <button
-                        onClick={() => copyToClipboard(client.client_number)}
-                        className="text-muted-foreground hover:text-primary transition-colors"
-                        title="Копировать номер клиента"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end items-start gap-2 md:mt-0 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => router.push('/dashboard/profile/edit')}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Редактировать
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => router.push('/dashboard/settings')}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Настройки
-                </Button>
-              </div>
-            </div>
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
+            <span className="text-2xl text-blue-600">
+              {userData.first_name.charAt(0)}
+            </span>
+          </div>
+        )}
+
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">
+              {userData.first_name} {userData.last_name}
+            </h2>
+          </div>
+
+          <div className="mt-2 space-y-2 text-gray-600">
+            {userData.username && (
+              <p className="flex items-center">
+                <span className="font-medium">Username:</span>
+                <span className="ml-2">@{userData.username}</span>
+              </p>
+            )}
+            <p className="flex items-center">
+              <span className="font-medium">Telegram ID:</span>
+              <span className="ml-2">{userData.id}</span>
+            </p>
+            {userData.language_code && (
+              <p className="flex items-center">
+                <span className="font-medium">Language:</span>
+                <span className="ml-2">{userData.language_code.toUpperCase()}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>

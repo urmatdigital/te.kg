@@ -45,7 +45,7 @@ export function StatsCard({
   }
 
   return (
-    <Card variant="outline" padding="sm" className="hover:shadow-md transition-shadow">
+    <Card variant="secondary" className="p-2 hover:shadow-md transition-shadow">
       <div className="flex items-center gap-2 mb-2">
         <div className="text-primary dark:text-primary/90">
           <Icon className="w-5 h-5" />

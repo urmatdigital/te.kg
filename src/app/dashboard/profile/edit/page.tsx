@@ -37,21 +37,21 @@ export default function EditProfilePage() {
 
     const fetchClientData = async () => {
       try {
-        const { data: clientData, error } = await supabase
-          .from('clients')
-          .select('full_name, phone')
-          .eq('user_id', user.id)
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('first_name, last_name, phone_number')
+          .eq('id', user.id)
           .maybeSingle()
 
         if (error) {
-          console.error('Error fetching client data:', error)
+          console.error('Error fetching user data:', error)
           return
         }
 
-        if (clientData) {
+        if (userData) {
           setFormData({
-            full_name: clientData.full_name || '',
-            phone: clientData.phone || '',
+            full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+            phone: userData.phone_number || '',
           })
         }
       } catch (error) {
@@ -71,12 +71,13 @@ export default function EditProfilePage() {
     setSaving(true)
     try {
       const { error } = await supabase
-        .from('clients')
+        .from('users')
         .update({
-          full_name: formData.full_name,
-          phone: formData.phone,
+          first_name: formData.full_name.split(' ')[0],
+          last_name: formData.full_name.split(' ').slice(1).join(' '),
+          phone_number: formData.phone,
         })
-        .eq('user_id', user.id)
+        .eq('id', user.id)
 
       if (error) throw error
 

@@ -110,7 +110,7 @@ export const api = {
   tracking: {
     async getHistory(packageId: string) {
       const { data, error } = await supabase
-        .from('tracking_history')
+        .from('package_status_history')
         .select('*')
         .eq('package_id', packageId)
         .order('timestamp', { ascending: false })
@@ -121,7 +121,7 @@ export const api = {
 
     async addEntry(packageId: string, status: string, location?: string, notes?: string) {
       const { data, error } = await supabase
-        .from('tracking_history')
+        .from('package_status_history')
         .insert({
           package_id: packageId,
           status,

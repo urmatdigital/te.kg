@@ -99,7 +99,7 @@ export default function HistoryPage() {
 
         <div className="space-y-4">
           {shipments.map((shipment) => (
-            <Card variant="default" padding="md" key={shipment.id}>
+            <Card variant="default" className="p-4" key={shipment.id}>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default function HistoryPage() {
         </div>
 
         {shipments.length === 0 && (
-          <Card variant="secondary" padding="lg" className="text-center">
+          <Card variant="secondary" className="p-6 text-center">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               Нет отправлений

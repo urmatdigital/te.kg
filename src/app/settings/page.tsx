@@ -17,8 +17,8 @@ export default function SettingsPage() {
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const [formData, setFormData] = useState({
-    fullName: user?.user_metadata?.full_name || '',
-    phone: user?.user_metadata?.phone || '',
+    fullName: user?.user_metadata?.first_name || '',
+    phone: user?.user_metadata?.phone_number || '',
     email: user?.email || '',
     currentPassword: '',
     newPassword: '',
@@ -38,21 +38,21 @@ export default function SettingsPage() {
     try {
       const { error } = await supabase.auth.updateUser({
         data: {
-          full_name: formData.fullName,
-          phone: formData.phone
+          first_name: formData.fullName,
+          phone_number: formData.phone
         }
       })
 
       if (error) throw error
 
-      // Обновляем данные в таблице clients
+      // Обновляем данные в таблице users
       const { error: clientError } = await supabase
-        .from('clients')
+        .from('users')
         .update({
-          full_name: formData.fullName,
-          phone: formData.phone
+          first_name: formData.fullName,
+          phone_number: formData.phone
         })
-        .eq('user_id', user.id)
+        .eq('id', user.id)
 
       if (clientError) throw clientError
 

@@ -5,15 +5,16 @@ import { adminApi } from './supabaseAdmin'
 async function userManagementExamples() {
   // Создание нового пользователя
   const newUser = await adminApi.users.createUser({
-    telegram_id: '123456789',
+    telegram_id: 123456789,
+    first_name: 'John',
+    last_name: 'Doe',
     username: 'john_doe',
-    full_name: 'John Doe',
-    role: 'user'
+    last_seen: new Date().toISOString()
   })
 
   // Обновление пользователя
   await adminApi.users.updateUser(newUser.id, {
-    phone: '+996555123456'
+    phone_number: '+996555123456'
   })
 
   // Получение всех пользователей
@@ -23,25 +24,36 @@ async function userManagementExamples() {
 async function packageManagementExamples() {
   // Создание новой посылки
   const newPackage = await adminApi.packages.createPackage({
+    user_id: '123e4567-e89b-12d3-a456-426614174000',
     tracking_number: 'TLP123456',
     status: 'registered',
-    current_location: 'Бишкек',
+    sender_name: 'John Doe',
+    sender_phone: '+996555123456',
+    recipient_name: 'Jane Smith',
+    recipient_phone: '+996700987654',
+    origin_address: 'Бишкек, ул. Чуй 123',
+    destination_address: 'Ош, ул. Ленина 456',
     weight: 2.5,
-    description: 'Тестовая посылка'
+    dimensions: '30x20x10'
+  })
+
+  // Создаем запись в истории с местоположением
+  await adminApi.tracking.addTrackingEntry({
+    package_id: newPackage.id,
+    status: 'registered',
+    location: 'Бишкек'
   })
 
   // Обновление статуса посылки
   await adminApi.packages.updatePackage(newPackage.id, {
-    status: 'in_transit',
-    current_location: 'Ош'
+    status: 'in_transit'
   })
 
-  // Добавление записи в историю отслеживания
+  // Добавляем новую запись в историю
   await adminApi.tracking.addTrackingEntry({
     package_id: newPackage.id,
     status: 'in_transit',
-    location: 'Ош',
-    notes: 'Посылка в пути'
+    location: 'Ош'
   })
 
   // Получение истории посылки

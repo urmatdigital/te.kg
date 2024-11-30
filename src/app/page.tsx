@@ -1,96 +1,108 @@
-'use client'
+'use client';
 
-import { useTranslation } from '@/hooks/useTranslation'
-import DashboardStats from '@/components/DashboardStats'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { TrackingCard } from '@/components/tracking/TrackingCard';
+import { TrackingDashboard } from '@/components/tracking/TrackingDashboard';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Header as AppHeader } from '@/components/Header';
+import { MessageCircle, Shield, Smartphone } from 'lucide-react';
+import Image from 'next/image';
 
-export default function Home() {
-  const { t } = useTranslation()
-  const router = useRouter()
+const sampleStatuses = [
+  {
+    title: 'Регистрация',
+    date: '30.11.2024 19:32',
+    isCompleted: true,
+  },
+  {
+    title: 'Склад в Китае',
+    date: '01.12.2024 10:15',
+    isCompleted: true,
+  },
+  {
+    title: 'В пути в Бишкек',
+    date: '02.12.2024 08:45',
+    isCompleted: false,
+  },
+  {
+    title: 'Доставка клиенту',
+    isCompleted: false,
+  },
+];
+
+const sampleStatusCount = {
+  total: 12,
+  inTransit: 5,
+  delivered: 4,
+  pending: 3,
+};
+
+export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+
+  useEffect(() => {
+    const tid = localStorage.getItem('telegram_id');
+    setIsLoggedIn(!!tid);
+  }, []);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Implement search logic here
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <AppHeader />
+        <main className="flex-1 pt-[72px] container mx-auto px-4 py-8 max-w-4xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Добро пожаловать в Tulpar Express</h1>
+            <p className="mb-8">Пожалуйста, войдите через Telegram для доступа к отслеживанию посылок</p>
+            <button
+              onClick={() => router.push('/auth')}
+              className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90"
+            >
+              Войти через Telegram
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] py-3 bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="z-50 bg-opacity-30 dark:bg-opacity-30 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-            
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <AppHeader />
+      <main className="flex-1 pt-[72px]">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          {/* Dashboard */}
+          <section className="mb-8">
+            <TrackingDashboard
+              statusCount={sampleStatusCount}
+              onSearch={handleSearch}
+            />
+          </section>
 
-      {/* Hero Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900 dark:text-white">
-              Доставка из Китая в Кыргызстан
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-              Быстрая и надежная доставка товаров из Китая. Отслеживание посылок в режиме реального времени.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-white dark:bg-gray-800">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white">
-            Наши преимущества
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-6 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Отслеживание
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Следите за своими посылками в режиме реального времени на каждом этапе доставки
-              </p>
-            </div>
-            <div className="p-6 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Глобальная сеть
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Широкая сеть складов и партнеров в Китае для быстрой обработки ваших заказов
-              </p>
-            </div>
-            <div className="p-6 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Надежность
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Гарантируем сохранность ваших товаров и соблюдение сроков доставки
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
-              Готовы начать?
+          {/* Tracking Cards */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+              Мои посылки
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-              Присоединяйтесь к тысячам довольных клиентов, которые уже пользуются нашими услугами
-            </p>
-          </div>
+            <div className="space-y-4">
+              <TrackingCard
+                trackingNumber="43243256786786876"
+                description="Посылка из Бишкека в Ош"
+                weight="2.5 кг"
+                statuses={sampleStatuses}
+                onEdit={() => console.log('Edit clicked')}
+                onDelete={() => console.log('Delete clicked')}
+              />
+            </div>
+          </section>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-gray-600 dark:text-gray-300">
-            2024 Tulpar Express. Все права защищены.
-          </div>
-        </div>
-      </footer>
+      </main>
     </div>
-  )
+  );
 }

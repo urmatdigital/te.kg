@@ -28,7 +28,7 @@ export function LocationsSection() {
   ]
 
   return (
-    <Card variant="default" padding="lg">
+    <Card variant="default" className="p-6">
       <h2 className="text-lg font-semibold mb-4">Пункты приема</h2>
       <div className="space-y-6">
         {locations.map((location, index) => (

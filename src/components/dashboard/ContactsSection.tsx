@@ -25,7 +25,7 @@ export function ContactsSection() {
   ]
 
   return (
-    <Card variant="default" padding="lg">
+    <Card variant="default" className="p-6">
       <h2 className="text-lg font-semibold mb-4">Контактная информация</h2>
       <div className="space-y-4">
         {contacts.map((contact, index) => (
