@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Production
+client/build/
+client/.next/
+client/out/
+server/dist/
+build/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.pem
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Package manager
+yarn.lock
+package-lock.json
+.yarn/
+.yarnrc.yml
+
+# Database
+*.sqlite
+*.db
+
+# Uploads and media
+uploads/
+media/
+public/uploads/
+
+# Build artifacts
+.vercel
+.netlify/
