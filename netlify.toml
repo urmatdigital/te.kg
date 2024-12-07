@@ -1,7 +1,7 @@
 [build]
   base = "client"
   publish = ".next"
-  command = "corepack enable && corepack prepare pnpm@latest --activate && pnpm install && pnpm run build"
+  command = "corepack enable && corepack prepare pnpm@latest --activate && pnpm install --no-frozen-lockfile && pnpm run build"
 
 [build.environment]
   NODE_VERSION = "18"
